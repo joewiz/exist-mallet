@@ -80,7 +80,7 @@ let $text2 := (<text>{$text[1]}</text>, <text>{$text[2]}</text>)
 let $text3 := xs:anyURI("/db/dramawebben/data/works")
 let $instances-doc-suffix := ".mallet"
 let $topic-model-doc-suffix := ".tm"
-(: Make sure the collection path you use here exists. :)
+let $create-collections := (xmldb:create-collection('/db', 'temp'), xmldb:create-collection('/db/temp', 'topic-example'))
 let $instances-doc-prefix := "/db/temp/topic-example"
 let $instances-path := $instances-doc-prefix || $instances-doc-suffix
 let $instances-path2 := $instances-doc-prefix || "2" || $instances-doc-suffix
@@ -116,6 +116,77 @@ return
         tm:topic-model-inference($topic-model-uri, $instances-uri, 50, (), ())
 ```
 
+## Expected results, monolingual
+
+```xml
+<topics:topicModel xmlns:topics="http://exist-db.org/xquery/mallet-topic-modeling">
+    <topics:topic n="0" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="1" alpha="0.01" totalTokens="3">
+        <topics:token rank="1">give</topics:token>
+        <topics:token rank="2">subjects</topics:token>
+        <topics:token rank="3">exist-db</topics:token>
+    </topics:topic>
+    <topics:topic n="2" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="3" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="4" alpha="0.01" totalTokens="3">
+        <topics:token rank="1">arguments</topics:token>
+        <topics:token rank="2">good</topics:token>
+        <topics:token rank="3">english</topics:token>
+    </topics:topic>
+    <topics:topic n="5" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="6" alpha="0.01" totalTokens="2">
+        <topics:token rank="1">text</topics:token>
+        <topics:token rank="2">subject</topics:token>
+    </topics:topic>
+    <topics:topic n="7" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="8" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="9" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="10" alpha="0.01" totalTokens="5">
+        <topics:token rank="1">strings</topics:token>
+        <topics:token rank="2">label</topics:token>
+        <topics:token rank="3">subjects</topics:token>
+        <topics:token rank="4">preconference</topics:token>
+        <topics:token rank="5">prague</topics:token>
+    </topics:topic>
+    <topics:topic n="11" alpha="0.01" totalTokens="0"/>
+    <topics:topic n="12" alpha="0.01" totalTokens="2">
+        <topics:token rank="1">xml</topics:token>
+        <topics:token rank="2">exist-db</topics:token>
+    </topics:topic>
+    <topics:topic n="13" alpha="0.01" totalTokens="3">
+        <topics:token rank="1">chosen</topics:token>
+        <topics:token rank="2">day</topics:token>
+        <topics:token rank="3">test</topics:token>
+    </topics:topic>
+    <topics:topic n="14" alpha="0.01" totalTokens="0"/>
+</topics:topicModel>
+
+<topics:wordLists xmlns:topics="http://exist-db.org/xquery/mallet-topic-modeling">
+    <topics:wordList n="0">
+        <topics:token normalized-form="test" topic="13"/>
+        <topics:token normalized-form="english" topic="4"/>
+        <topics:token normalized-form="exist-db" topic="12"/>
+        <topics:token normalized-form="xml" topic="12"/>
+        <topics:token normalized-form="prague" topic="10"/>
+        <topics:token normalized-form="preconference" topic="10"/>
+        <topics:token normalized-form="day" topic="13"/>
+        <topics:token normalized-form="subject" topic="6"/>
+        <topics:token normalized-form="good" topic="4"/>
+        <topics:token normalized-form="subjects" topic="10"/>
+        <topics:token normalized-form="chosen" topic="13"/>
+        <topics:token normalized-form="label" topic="10"/>
+        <topics:token normalized-form="text" topic="6"/>
+    </topics:wordList>
+    <topics:wordList n="1">
+        <topics:token normalized-form="exist-db" topic="1"/>
+        <topics:token normalized-form="subjects" topic="1"/>
+        <topics:token normalized-form="give" topic="1"/>
+        <topics:token normalized-form="strings" topic="10"/>
+        <topics:token normalized-form="arguments" topic="4"/>
+    </topics:wordList>
+</topics:wordLists>
+```
+
 ## Usage example, polylingual topic modeling (PLTM)
 
 ```xquery
@@ -135,8 +206,8 @@ let $text2 := (<text><text>{$text-sv[1]}</text><text>{$text-sv[2]}</text></text>
 let $text3 := xs:anyURI("/db/dramawebben/data/works")
 let $instances-doc-suffix := ".mallet"
 let $topic-model-doc-suffix := ".pltm"
-(: Make sure the collection path you use here exists. :)
- 
+
+let $create-collections := (xmldb:create-collection('/db', 'temp'), xmldb:create-collection('/db/temp', 'topic-example'))
 let $instances-doc-prefix := "/db/temp/topic-example"
 let $instances-path := $instances-doc-prefix || $instances-doc-suffix
 let $instances-path2 := $instances-doc-prefix || "2" || $instances-doc-suffix
@@ -167,7 +238,7 @@ let $created := if ($create-instances-p) then
     switch ($call-type)
         case "string" return for $instance-uri at $pos in $instances-uris return tm:create-instances-string($instance-uri, ($text-sv, $text-en)[$pos], $config)
         case "node" return for $instance-uri at $pos in $instances-uris return tm:create-instances-node($instance-uri, $text2[$pos]/text, $config)
-        case "collection" return tm:create-instances-collection-polylingual($instance-uri, $text3, xs:QName("tei:body"), $languages, $config)
+        case "collection" return tm:create-instances-collection-polylingual($instances-uri, $text3, xs:QName("tei:body"), $languages, $config)
         default return for $instance-uri at $pos in $instances-uri return tm:create-instances-string($instance-uri, ($text-sv, $text-en)[$pos], $config)
     else ()
 return 
@@ -177,4 +248,171 @@ return
     else
         tm:polylingual-topic-model-inference($topic-model-uri, $instances-uri, 750, (), (), $languages)
     (: tm:polylingual-topic-model($instances-uri, 5, 25, 50, (), (), (), ("sv")) :)
+```
+
+## Expected results, polylingual topic modeling (PLTM)
+
+```xml
+<topics:topicModel xmlns:topics="http://exist-db.org/xquery/mallet-topic-modeling">
+    <topics:topic n="0" alpha="1269.651281779051">
+        <topics:language name="sv" totalTokens="12" beta="0.05997365217342881">
+            <topics:token rank="1">ämne</topics:token>
+            <topics:token rank="2">här</topics:token>
+            <topics:token rank="3">strängar</topics:token>
+            <topics:token rank="4">vad</topics:token>
+            <topics:token rank="5">ämnena</topics:token>
+        </topics:language>
+        <topics:language name="en" totalTokens="3" beta="0.13893142897441135">
+            <topics:token rank="1">subjects</topics:token>
+            <topics:token rank="2">prague</topics:token>
+            <topics:token rank="3">test</topics:token>
+        </topics:language>
+    </topics:topic>
+    <topics:topic n="1" alpha="1540.3322053077632">
+        <topics:language name="sv" totalTokens="8" beta="0.05997365217342881">
+            <topics:token rank="1">om</topics:token>
+            <topics:token rank="2">verkligen</topics:token>
+            <topics:token rank="3">den</topics:token>
+            <topics:token rank="4">vilket</topics:token>
+            <topics:token rank="5">något</topics:token>
+        </topics:language>
+        <topics:language name="en" totalTokens="4" beta="0.13893142897441135">
+            <topics:token rank="1">strings</topics:token>
+            <topics:token rank="2">text</topics:token>
+            <topics:token rank="3">chosen</topics:token>
+            <topics:token rank="4">preconference</topics:token>
+        </topics:language>
+    </topics:topic>
+    <topics:topic n="2" alpha="976.447795420123">
+        <topics:language name="sv" totalTokens="7" beta="0.05997365217342881">
+            <topics:token rank="1">ger</topics:token>
+            <topics:token rank="2">händer</topics:token>
+            <topics:token rank="3">på</topics:token>
+            <topics:token rank="4">skilja</topics:token>
+            <topics:token rank="5">att</topics:token>
+        </topics:language>
+        <topics:language name="en" totalTokens="3" beta="0.13893142897441135">
+            <topics:token rank="1">exist-db</topics:token>
+            <topics:token rank="2">good</topics:token>
+        </topics:language>
+    </topics:topic>
+    <topics:topic n="3" alpha="954.1483294895851">
+        <topics:language name="sv" totalTokens="6" beta="0.05997365217342881">
+            <topics:token rank="1">argument</topics:token>
+            <topics:token rank="2">vi</topics:token>
+            <topics:token rank="3">exist-db</topics:token>
+            <topics:token rank="4">så</topics:token>
+            <topics:token rank="5">xml-prag</topics:token>
+        </topics:language>
+        <topics:language name="en" totalTokens="3" beta="0.13893142897441135">
+            <topics:token rank="1">subjects</topics:token>
+            <topics:token rank="2">subject</topics:token>
+            <topics:token rank="3">xml</topics:token>
+        </topics:language>
+    </topics:topic>
+    <topics:topic n="4" alpha="1206.0944789971775">
+        <topics:language name="sv" totalTokens="7" beta="0.05997365217342881">
+            <topics:token rank="1">som</topics:token>
+            <topics:token rank="2">två</topics:token>
+            <topics:token rank="3">texten</topics:token>
+            <topics:token rank="4">etikett</topics:token>
+            <topics:token rank="5">kommer</topics:token>
+        </topics:language>
+        <topics:language name="en" totalTokens="4" beta="0.13893142897441135">
+            <topics:token rank="1">arguments</topics:token>
+            <topics:token rank="2">give</topics:token>
+            <topics:token rank="3">label</topics:token>
+            <topics:token rank="4">day</topics:token>
+        </topics:language>
+    </topics:topic>
+</topics:topicModel>
+
+<topics:documentTopics xmlns:topics="http://exist-db.org/xquery/mallet-topic-modeling">
+    <topics:document n="0">
+        <topics:topic ref="0" weight="0.29729729890823364"/>
+        <topics:topic ref="1" weight="0.2432432472705841"/>
+        <topics:topic ref="4" weight="0.18918919563293457"/>
+        <topics:topic ref="3" weight="0.13513512909412384"/>
+        <topics:topic ref="2" weight="0.13513512909412384"/>
+    </topics:document>
+    <topics:document n="1">
+        <topics:topic ref="2" weight="0.25"/>
+        <topics:topic ref="4" weight="0.20000000298023224"/>
+        <topics:topic ref="3" weight="0.20000000298023224"/>
+        <topics:topic ref="0" weight="0.20000000298023224"/>
+        <topics:topic ref="1" weight="0.15000000596046448"/>
+    </topics:document>
+</topics:documentTopics>
+
+<topics:wordLists xmlns:topics="http://exist-db.org/xquery/mallet-topic-modeling">
+    <topics:language name="sv">
+        <topics:wordList n="0">
+            <topics:token normalized-form="det" topic="1"/>
+            <topics:token normalized-form="här" topic="0"/>
+            <topics:token normalized-form="är" topic="0"/>
+            <topics:token normalized-form="en" topic="2"/>
+            <topics:token normalized-form="text" topic="2"/>
+            <topics:token normalized-form="för" topic="1"/>
+            <topics:token normalized-form="förkonferensdagen" topic="0"/>
+            <topics:token normalized-form="xml-prag" topic="3"/>
+            <topics:token normalized-form="ett" topic="0"/>
+            <topics:token normalized-form="ämne" topic="0"/>
+            <topics:token normalized-form="gott" topic="1"/>
+            <topics:token normalized-form="som" topic="4"/>
+            <topics:token normalized-form="något" topic="1"/>
+            <topics:token normalized-form="så" topic="3"/>
+            <topics:token normalized-form="vilket" topic="1"/>
+            <topics:token normalized-form="ämne" topic="0"/>
+            <topics:token normalized-form="kommer" topic="4"/>
+            <topics:token normalized-form="att" topic="2"/>
+            <topics:token normalized-form="tilldelas" topic="0"/>
+            <topics:token normalized-form="som" topic="4"/>
+            <topics:token normalized-form="etikett" topic="4"/>
+            <topics:token normalized-form="för" topic="3"/>
+            <topics:token normalized-form="den" topic="1"/>
+            <topics:token normalized-form="här" topic="0"/>
+            <topics:token normalized-form="texten" topic="4"/>
+        </topics:wordList>
+        <topics:wordList n="1">
+            <topics:token normalized-form="kan" topic="0"/>
+            <topics:token normalized-form="exist-db" topic="3"/>
+            <topics:token normalized-form="verkligen" topic="1"/>
+            <topics:token normalized-form="skilja" topic="2"/>
+            <topics:token normalized-form="på" topic="2"/>
+            <topics:token normalized-form="ämnena" topic="0"/>
+            <topics:token normalized-form="vad" topic="0"/>
+            <topics:token normalized-form="händer" topic="2"/>
+            <topics:token normalized-form="om" topic="1"/>
+            <topics:token normalized-form="vi" topic="3"/>
+            <topics:token normalized-form="ger" topic="2"/>
+            <topics:token normalized-form="två" topic="4"/>
+            <topics:token normalized-form="strängar" topic="0"/>
+            <topics:token normalized-form="som" topic="4"/>
+            <topics:token normalized-form="argument" topic="3"/>
+        </topics:wordList>
+    </topics:language>
+    <topics:language name="en">
+        <topics:wordList n="0">
+            <topics:token normalized-form="test" topic="0"/>
+            <topics:token normalized-form="exist-db" topic="2"/>
+            <topics:token normalized-form="xml" topic="3"/>
+            <topics:token normalized-form="prague" topic="0"/>
+            <topics:token normalized-form="preconference" topic="1"/>
+            <topics:token normalized-form="day" topic="4"/>
+            <topics:token normalized-form="subject" topic="3"/>
+            <topics:token normalized-form="good" topic="2"/>
+            <topics:token normalized-form="subjects" topic="0"/>
+            <topics:token normalized-form="chosen" topic="1"/>
+            <topics:token normalized-form="label" topic="4"/>
+            <topics:token normalized-form="text" topic="1"/>
+        </topics:wordList>
+        <topics:wordList n="1">
+            <topics:token normalized-form="exist-db" topic="2"/>
+            <topics:token normalized-form="subjects" topic="3"/>
+            <topics:token normalized-form="give" topic="4"/>
+            <topics:token normalized-form="strings" topic="1"/>
+            <topics:token normalized-form="arguments" topic="4"/>
+        </topics:wordList>
+    </topics:language>
+</topics:wordLists>
 ```
