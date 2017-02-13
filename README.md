@@ -15,55 +15,60 @@ Integrates the Mallet Machine Learning and Topic Modeling library into eXist-db.
 There are currently three main function groups:
 
 ### topics:create-instances-*
+
 Processes resources in the provided collection hierarchy and creates a serialized instances document which can be used by nearly all Mallet sub-packages. Returns the path to the stored instances document.
-The parameter $configuration gives the configuration, eg &lt;parameters&gt;&lt;param name='stopwords' value='false'/&gt;&lt;param name='langugage' value='en'/&gt;&lt;/parameters&gt;.  For polylingual you use the $collection-uris parameter with one or more URIs. If only one collection-uri is given, sub-collections for each language code are expected, otherwise one collection-uri for each of the languages in the same order are expected.
 
+The parameter `$configuration` gives the configuration, eg `<parameters><param name='stopwords' value='false'/><param name='langugage' value='en'/></parameters>`.  For polylingual you use the `$collection-uris` parameter with one or more URIs. If only one `collection-uri` is given, sub-collections for each language code are expected, otherwise one `collection-uri` for each of the languages in the same order are expected.
+
+```xquery
 topics:create-instances-collection($instances-doc as xs:anyURI, $collection-uri as xs:anyURI, $qname as xs:QName?) as xs:string?
-
 topics:create-instances-collection($instances-doc as xs:anyURI, $collection-uri as xs:anyURI, $qname as xs:QName?, $configuration as element()) as xs:string?
 
 topics:create-instances-collection-polylingual($instances-doc as xs:anyURI, $collection-uri as xs:anyURI, $qname as xs:QName?, $languages as xs:string+) as xs:string?
-
 topics:create-instances-collection-polylingual($instances-doc as xs:anyURI, $collection-uris as xs:anyURI+, $qname as xs:QName?, $languages as xs:string+, $configuration as element()) as xs:string+
 
 topics:create-instances-node($instances-doc as xs:anyURI, $node as node()+) as xs:string?
-
 topics:create-instances-node($instances-doc as xs:anyURI, $node as node()+, $configuration as element()) as xs:string?
 
 topics:create-instances-string($instances-doc as xs:anyURI, $text as xs:string+) as xs:string?
-
 topics:create-instances-string($instances-doc as xs:anyURI, $text as xs:string+, $configuration as element()) as xs:string?
+```
 
 ### topics:topic-model-inference / topics:polylingual-topic-model-inference
+
 Processes new instances and applies the stored topic model's inferencer(s). Returns the topic probabilities for the inferenced instances.
 
+```xquery
 topics:topic-model-inference($instances-doc as xs:anyURI, $number-of-words-per-topic as xs:integer, $number-of-topics as xs:integer, $number-of-iterations as xs:integer?, $number-of-threads as xs:integer?, $alpha_t as xs:double?, $beta_w as xs:double?, $language as xs:string?, $instances-inference-doc as xs:anyURI) as node()+
-
 topics:topic-model-inference($topic-model-doc as xs:anyURI, $instances-inference-doc as xs:anyURI, $number-of-iterations as xs:integer, $thinning as xs:integer?, $burn-in as xs:integer?) as node()+
 
 topics:polylingual-topic-model-inference($instances-doc as xs:anyURI, $number-of-words-per
 -topic as xs:integer, $number-of-topics as xs:integer, $number-of-iterations as xs:integer?, $number-of-threads as xs:integer?, $alpha_t as xs:double?, $beta_w as xs:double?, $languages as xs:string+, $instances-inference-doc as xs:anyURI) as node()+
-
 topics:polylingual-topic-model-inference($topic-model-doc as xs:anyURI, $instances-inference
 -doc as xs:anyURI, $number-of-iterations as xs:integer, $thinning as xs:integer?, $burn-in as xs:integer?, $languages as xs:string+) as node()+
+```
 
 ### topics:topic-model / topics:polylingual-topic-model
+
 Processes instances and creates either a monolingual topic model or a polylingual topic model (PLTM) which can be used for inference. Returns the specified number of top ranked words per topic.
 
 Note: currently the language parameter does very little. It guides formating of numbers and use of stopwords (not for polylingual) though. For PLTM it is very important to tune the parameters otherwise it might even kill the whole jvm. 
 
+```xquery
 topics:topic-model($instances-doc as xs:anyURI, $number-of-words-per-topic as xs:integer, $number-of-topics as xs:integer, $number-of-iterations as xs:integer?, $number-of-threads as xs:integer?, $alpha_t as xs:double?, $beta_w as xs:double?, $language as xs:string?) as node()+
 
 topics:polylingual-topic-model($instances-doc as xs:anyURI, $number-of-words-per-topic as xs
 :integer, $number-of-topics as xs:integer, $number-of-iterations as xs:integer?, $number-of-threads as xs:integer?, $alpha_t as xs:double?, $beta_w as xs:double?, $languages as xs:string+) as node()+
+```
 
 ### topics:topic-model-sample
+
 Processes instances and creates a topic model which can be used for inference. Returns the specified number of top ranked words per topic. All other parameters use default values. Runs the model for 50 iterations and stops (this is for testing only, for real applications, use 1000 to 2000 iterations).
 
+```xquery
 topics:topic-model-sample($instances-doc as xs:anyURI) as node()+
-
 topics:topic-model-sample($instances-doc as xs:anyURI, $number-of-words-per-topic as xs:integer, $language as xs:string?) as node()+
-
+```
 
 ## Usage example, monolingual
 
